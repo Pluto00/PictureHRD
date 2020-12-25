@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html style="height: 100%" lang="ch">
+<head>
+    <meta charset="utf-8">
+    <title>简陋的排行榜</title>
+</head>
+<body style="height: 100%; margin: 0">
+<div id="container" style="height: 100%"></div>
+</body>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/extension/dataTool.min.js"></script>
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById("container"));
+    var app = {};
+    option = null;
+    option = {
+        title: {
+            text: '千帆竞技图'
+        },
+        tooltip: {
+            trigger: 'axis',
+            position: function (point, params, dom, rect, size) {
+                // 鼠标坐标和提示框位置的参考坐标系是：以外层div的左上角那一点为原点，x轴向右，y轴向下
+                // 提示框位置
+                var x = 0; // x坐标位置
+                var y = 0; // y坐标位置
+
+                // 当前鼠标位置
+                var pointX = point[0];
+                var pointY = point[1];
+
+                // 外层div大小
+                // var viewWidth = size.viewSize[0];
+                // var viewHeight = size.viewSize[1];
+
+                // 提示框大小
+                var boxWidth = size.contentSize[0];
+                var boxHeight = size.contentSize[1];
+
+                // boxWidth > pointX 说明鼠标左边放不下提示框
+                if (boxWidth > pointX) {
+                    x = 5;
+                } else { // 左边放的下
+                    x = pointX - boxWidth;
+                }
+
+                // boxHeight > pointY 说明鼠标上边放不下提示框
+                if (boxHeight > pointY) {
+                    y = 5;
+                } else { // 上边放得下
+                    y = pointY - boxHeight;
+                }
+
+                return [x, y];
+            },
+            formatter: function (params) {
+                let newParams;
+                let tooltipString = [];
+                newParams = [...params];
+                newParams.sort((a, b) => {
+                    return b.value - a.value
+                });
+                newParams.forEach((p) => {
+                    const cont = p.marker + ' 队伍' + p.seriesName + ': ' + p.value + '<br/>';
+                    tooltipString.push(cont);
+                });
+                return tooltipString.join('');
+            }
+        },
+        legend: {
+            data: {{ legend | safe}}
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '5%',
+            containLabel: true
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {}
+            }
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: {{ date | safe }}
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {% for data in datas %}
+                {
+                    name: {{ data['name'] }},
+                    type: '{{ data['type'] }}',
+                    data: {{ data['data'] }}
+                },
+            {% endfor %}
+        ]
+    }
+    ;
+
+    if (option && typeof option === "object") {
+        myChart.setOption(option, true);
+    }
+</script>
+</html>
